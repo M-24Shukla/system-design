@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DDIA Learning Notes</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Chapter navigation">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">D</div>
+          <div>
+            <h1>DDIA Notes</h1>
+            <p>Read, recall, revise</p>
+          </div>
+        </div>
+
+        <label class="search-box">
+          <span>Search notes</span>
+          <input id="searchInput" type="search" placeholder="write skew, quorum, clocks" />
+        </label>
+
+        <nav id="chapterNav" class="chapter-nav"></nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Designing Data-Intensive Applications</p>
+            <h2 id="chapterTitle">Loading...</h2>
+          </div>
+          <div class="progress-panel" aria-label="Chapter progress">
+            <span id="chapterProgressText">0%</span>
+            <div class="progress-track">
+              <div id="chapterProgressBar" class="progress-bar"></div>
+            </div>
+          </div>
+        </header>
+
+        <section class="tabs" aria-label="Learning modes">
+          <button class="tab active" data-view="notes">Notes</button>
+          <button class="tab" data-view="flashcards">Flashcards</button>
+          <button class="tab" data-view="mcq">MCQs</button>
+          <button class="tab" data-view="weak">Weak Areas</button>
+          <button class="tab" data-view="cheatsheet">Cheat Sheet</button>
+        </section>
+
+        <section id="statusBanner" class="status-banner" hidden></section>
+
+        <section id="notesView" class="view active-view">
+          <div class="view-header">
+            <div>
+              <h3>Chapter Notes</h3>
+              <p>Use the search box to filter headings and paragraphs across the active chapter.</p>
+            </div>
+            <button id="markRevisedBtn" class="secondary-action" type="button">Mark revised</button>
+          </div>
+          <article id="notesContent" class="notes-content"></article>
+        </section>
+
+        <section id="flashcardsView" class="view">
+          <div class="view-header">
+            <div>
+              <h3>Flashcards</h3>
+              <p>Flip the card, then rate recall. Hard and Again cards return more often.</p>
+            </div>
+            <button id="resetFlashcardsBtn" class="secondary-action" type="button">Reset deck</button>
+          </div>
+          <div class="flashcard-stage">
+            <div id="flashcard" class="flashcard" tabindex="0" role="button" aria-label="Flip flashcard">
+              <p id="flashcardCount" class="card-count"></p>
+              <h4 id="flashcardPrompt"></h4>
+              <p id="flashcardAnswer" class="flashcard-answer"></p>
+              <span class="flip-hint">Click to flip</span>
+            </div>
+            <div class="rating-row" aria-label="Rate flashcard recall">
+              <button data-rating="again">Again</button>
+              <button data-rating="hard">Hard</button>
+              <button data-rating="good">Good</button>
+              <button data-rating="easy">Easy</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="mcqView" class="view">
+          <div class="view-header">
+            <div>
+              <h3>MCQ Practice</h3>
+              <p>Answer each question and read the explanation before moving on.</p>
+            </div>
+            <button id="resetQuizBtn" class="secondary-action" type="button">Reset quiz</button>
+          </div>
+          <div id="quizPanel" class="quiz-panel"></div>
+        </section>
+
+        <section id="weakView" class="view">
+          <div class="view-header">
+            <div>
+              <h3>Weak Areas</h3>
+              <p>These are the topics that needed correction during our learning sessions.</p>
+            </div>
+          </div>
+          <div id="weakAreas" class="weak-grid"></div>
+        </section>
+
+        <section id="cheatsheetView" class="view">
+          <div class="view-header">
+            <div>
+              <h3>Cheat Sheet</h3>
+              <p>High-signal distinctions for last-minute revision.</p>
+            </div>
+          </div>
+          <div id="cheatSheet" class="cheatsheet"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
