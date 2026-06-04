@@ -397,5 +397,189 @@ window.DDIA_CHAPTERS = [
       ["Consensus", "Nodes agree on one value; total order broadcast agrees on a sequence."],
       ["Coordination Service", "Strongly consistent metadata for leaders, locks, config, membership."]
     ]
+  },
+  {
+    id: "batch-processing",
+    title: "Batch Processing",
+    subtitle: "MapReduce, joins, workflows, skew, and modern batch engines",
+    notesPath: "./batch-processing-summary.md",
+    flashcards: [
+      {
+        front: "What is a batch?",
+        back: "A bounded input slice/window/chunk of records processed together, such as all logs from one day."
+      },
+      {
+        front: "System of record vs derived data?",
+        back: "System of record is the source of truth. Derived data is computed from it and can usually be rebuilt."
+      },
+      {
+        front: "Online vs stream processing?",
+        back: "Online processing answers a direct request; stream processing continuously reacts to events in the background."
+      },
+      {
+        front: "What does a mapper do?",
+        back: "It reads input records and emits zero or more intermediate key-value pairs."
+      },
+      {
+        front: "What does shuffle do?",
+        back: "It moves mapper outputs so all records with the same key reach the same reducer."
+      },
+      {
+        front: "Why are combiners limited?",
+        back: "They operate on partial local data and may run zero or many times, so logic must be safe for partial aggregation."
+      },
+      {
+        front: "Reduce-side join vs map-side join?",
+        back: "Reduce-side join shuffles matching keys to reducers; map-side join joins locally but requires prepared/compatible inputs."
+      },
+      {
+        front: "What is a hot key?",
+        back: "A key with disproportionately many records, causing one reducer/task to get overloaded."
+      },
+      {
+        front: "Why is  MapReduce slow for chained workflows?",
+        back: "Each job materializes output to disk before the next job starts, causing repeated I/O and scheduling overhead."
+      },
+      {
+        front: "What did Spark improve?",
+        back: "Spark keeps intermediate data in memory when possible, offers richer APIs, and optimizes whole pipelines."
+      }
+    ],
+    questions: [
+      {
+        prompt: "In batch processing, what is a batch?",
+        options: [
+          "The final output table",
+          "A bounded input slice of records",
+          "A single user request",
+          "A never-ending event stream"
+        ],
+        answer: 1,
+        explanation: "A batch is the bounded input group/window of records processed together."
+      },
+      {
+        prompt: "Which statement best distinguishes online and stream processing?",
+        options: [
+          "Online answers a direct request; stream reacts continuously to events",
+          "Online is always slower than stream",
+          "Stream requires no derived data",
+          "Online processing only happens nightly"
+        ],
+        answer: 0,
+        explanation: "Online processing is request/response. Stream processing is event-driven and continuous."
+      },
+      {
+        prompt: "What is the role of shuffle in MapReduce?",
+        options: [
+          "It deletes duplicate source records",
+          "It moves mapper outputs so same-key records reach the same reducer",
+          "It makes all reducers run on one machine",
+          "It replaces the mapper"
+        ],
+        answer: 1,
+        explanation: "Shuffle is the data movement step that groups intermediate records by key for reducers."
+      },
+      {
+        prompt: "Why is average unsafe as a direct combiner operation?",
+        options: [
+          "Average cannot be computed in batch systems",
+          "Averaging partial averages can produce the wrong global average",
+          "Reducers cannot process numbers",
+          "Combiners only work with strings"
+        ],
+        answer: 1,
+        explanation: "Average must be represented as sum and count so partial aggregates combine correctly."
+      },
+      {
+        prompt: "When is a broadcast hash join appropriate?",
+        options: [
+          "When both datasets are huge and unsorted",
+          "When the smaller dataset fits in memory on every mapper",
+          "When no join key exists",
+          "When reducers must receive all data"
+        ],
+        answer: 1,
+        explanation: "Broadcast hash join copies the smaller dataset to each mapper for local lookup."
+      },
+      {
+        prompt: "Why are hot keys painful in reduce-side joins?",
+        options: [
+          "They make physical clocks drift",
+          "All matching records for the hot key converge on one reducer",
+          "They prevent mappers from reading files",
+          "They remove the need for shuffle"
+        ],
+        answer: 1,
+        explanation: "The reducer for a hot join key gets a massive group from both datasets, causing skew and stragglers."
+      },
+      {
+        prompt: "What is speculative execution?",
+        options: [
+          "Deleting all failed task output forever",
+          "Running a duplicate copy of a slow task and using the first successful result",
+          "Replacing batch processing with online processing",
+          "Sorting data without reducers"
+        ],
+        answer: 1,
+        explanation: "Speculative execution mitigates stragglers by racing a duplicate copy of a slow task."
+      },
+      {
+        prompt: "Why should batch output be published only after successful completion?",
+        options: [
+          "To expose partial output faster",
+          "To avoid exposing incomplete or inconsistent results",
+          "To prevent reruns",
+          "To make source data mutable"
+        ],
+        answer: 1,
+        explanation: "Writing to temporary output and atomically publishing after success prevents partial failed output from becoming visible."
+      }
+    ],
+    weakAreas: [
+      {
+        title: "Batch means input slice",
+        text: "A batch is the bounded input window/chunk of records, not the derived output."
+      },
+      {
+        title: "Stream vs online",
+        text: "Online processing returns a direct response to a request. Stream processing reacts continuously to events, often asynchronously."
+      },
+      {
+        title: "Huge file binary search",
+        text: "For variable-length sorted logs, binary search by byte offset, align to the next full line, then scan forward."
+      },
+      {
+        title: "Hadoop configuration layers",
+        text: "Mapper/reducer code defines what to compute; job config defines paths/classes/types/reducers; cluster config defines resources, queues, retries, and shuffle settings."
+      },
+      {
+        title: "Combiner safety",
+        text: "Combiners process partial data and may run multiple times. Sum/count/min/max are safe; average needs sum and count."
+      },
+      {
+        title: "Map-side join preconditions",
+        text: "Map-side joins are fast only when data is already prepared: small table fits in memory, same partitioning, or same sort order."
+      },
+      {
+        title: "Straggler definition",
+        text: "A straggler is the slow task that delays the whole job, often caused by skew or a hot key."
+      },
+      {
+        title: "Materialized output",
+        text: "The danger of record-by-record output updates is exposing partial results. Write complete output, then publish atomically."
+      }
+    ],
+    cheatSheet: [
+      ["Batch", "Bounded input slice processed in bulk."],
+      ["Mapper", "Input record -> zero or more key-value pairs."],
+      ["Reducer", "One key and all its values -> output."],
+      ["Shuffle", "Move same-key mapper outputs to the same reducer."],
+      ["Combiner", "Local partial aggregation before shuffle."],
+      ["Reduce-Side Join", "General join; shuffle brings matching records together."],
+      ["Map-Side Join", "Fast local join; requires prepared/compatible input."],
+      ["Hot Key", "One key has too many records and overloads a reducer."],
+      ["Materialized Output", "Durable derived result written after successful batch computation."],
+      ["Spark vs MapReduce", "Spark reduces unnecessary disk materialization and optimizes richer pipelines."]
+    ]
   }
 ];
