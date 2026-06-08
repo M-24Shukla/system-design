@@ -581,5 +581,375 @@ window.DDIA_CHAPTERS = [
       ["Materialized Output", "Durable derived result written after successful batch computation."],
       ["Spark vs MapReduce", "Spark reduces unnecessary disk materialization and optimizes richer pipelines."]
     ]
+  },
+  {
+    id: "stream-processing",
+    title: "Stream Processing",
+    subtitle: "Events, logs, delivery semantics, windows, joins, state, and CDC",
+    notesPath: "./stream-processing-summary.md",
+    flashcards: [
+      {
+        front: "What is a stream?",
+        back: "An unbounded sequence of events."
+      },
+      {
+        front: "Event vs state?",
+        back: "An event is an immutable fact. State is the current result after applying events."
+      },
+      {
+        front: "What is an offset?",
+        back: "An event's position in an append-only log, used by consumers to track progress."
+      },
+      {
+        front: "Kafka queue vs pub-sub?",
+        back: "Kafka is pub-sub across consumer groups and queue-like within one consumer group."
+      },
+      {
+        front: "At-most-once vs at-least-once?",
+        back: "At-most-once may lose events but avoids duplicates. At-least-once avoids loss but may duplicate events."
+      },
+      {
+        front: "Event time vs processing time?",
+        back: "Event time is when the event happened. Processing time is when the processor saw it."
+      },
+      {
+        front: "What is a watermark?",
+        back: "An estimate that most events up to a certain event time have arrived."
+      },
+      {
+        front: "Why do streams need windows?",
+        back: "Streams are unbounded, so windows create finite ranges for aggregation."
+      },
+      {
+        front: "Why do stream-stream joins need windows?",
+        back: "To bound how long old events are kept waiting for matching future events."
+      },
+      {
+        front: "What is CDC?",
+        back: "Change Data Capture turns committed database changes into event streams, often by reading WAL/binlog/oplog."
+      }
+    ],
+    questions: [
+      {
+        prompt: "What is the best definition of an event?",
+        options: [
+          "The current value of a database row",
+          "An immutable record of something that happened",
+          "A consumer offset",
+          "A network partition"
+        ],
+        answer: 1,
+        explanation: "Events are facts about actions/changes that happened."
+      },
+      {
+        prompt: "If a consumer commits an offset before processing and then crashes, what can happen?",
+        options: [
+          "The event may be skipped/lost",
+          "The event is guaranteed exactly once",
+          "The broker deletes the whole topic",
+          "All consumer groups reset"
+        ],
+        answer: 0,
+        explanation: "Recovery resumes after the committed offset, so the unprocessed event may be skipped."
+      },
+      {
+        prompt: "Kafka behaves like pub-sub because:",
+        options: [
+          "Every producer belongs to one producer group",
+          "Multiple consumer groups can independently read the same topic",
+          "Partitions are unordered",
+          "Offsets are global across all topics"
+        ],
+        answer: 1,
+        explanation: "Each consumer group can receive the full stream independently."
+      },
+      {
+        prompt: "Where is ordering guaranteed in a partitioned log?",
+        options: [
+          "Across all partitions globally",
+          "Only within a partition",
+          "Only across consumer groups",
+          "Only by processing time"
+        ],
+        answer: 1,
+        explanation: "Partitioned logs preserve order within each partition, not across the whole topic."
+      },
+      {
+        prompt: "What is a late event?",
+        options: [
+          "Any event with a large payload",
+          "An event that belongs to an earlier event-time window but arrives after the window was considered complete",
+          "Any event processed by a queue",
+          "A duplicated CDC snapshot"
+        ],
+        answer: 1,
+        explanation: "Late is relative to event-time windows/watermarks, not simply a large delay."
+      },
+      {
+        prompt: "Which window type is fixed-size and non-overlapping?",
+        options: ["Session window", "Tumbling window", "Hopping window", "Join window"],
+        answer: 1,
+        explanation: "Tumbling windows divide time into fixed non-overlapping ranges."
+      },
+      {
+        prompt: "Why can stream joins cause unbounded state growth?",
+        options: [
+          "Because topics cannot be partitioned",
+          "Because the processor may keep unmatched events forever without windows/retention",
+          "Because state is always stateless",
+          "Because CDC requires no offsets"
+        ],
+        answer: 1,
+        explanation: "Without windows, watermarks, or expiration, unmatched events may be retained indefinitely."
+      },
+      {
+        prompt: "What must be recovered consistently for stateful stream fault tolerance?",
+        options: [
+          "Only the latest wall-clock timestamp",
+          "State and offsets, plus output consistency where relevant",
+          "Only the producer name",
+          "Only the topic name"
+        ],
+        answer: 1,
+        explanation: "State and offsets describe the same progress. Outputs also need idempotency or transactions."
+      },
+      {
+        prompt: "Why does CDC reduce the dual-write problem?",
+        options: [
+          "It derives events from committed database changes",
+          "It prevents all database writes",
+          "It removes the need for logs",
+          "It makes events mutable"
+        ],
+        answer: 0,
+        explanation: "CDC reads committed database changes from logs, avoiding separate application DB write + event publish inconsistency."
+      }
+    ],
+    weakAreas: [
+      {
+        title: "Exactly-once scope",
+        text: "Exactly-once needs transactions/checkpoints/idempotency and does not magically cover email, payment, or third-party side effects."
+      },
+      {
+        title: "Kafka consumer groups",
+        text: "Kafka is pub-sub across consumer groups and queue-like within one group."
+      },
+      {
+        title: "Late event definition",
+        text: "A late event arrives after its event-time window was considered complete, not merely after a large delay."
+      },
+      {
+        title: "Stream join state",
+        text: "Stream-stream joins need windows/retention to avoid keeping unmatched events forever."
+      },
+      {
+        title: "Stateful recovery",
+        text: "State, offsets, and outputs must be restored consistently to avoid loss, duplicates, or wrong aggregates."
+      },
+      {
+        title: "CDC logs vs snapshot",
+        text: "CDC reads change logs like WAL/binlog/oplog; initial snapshot is a separate bootstrap step."
+      }
+    ],
+    cheatSheet: [
+      ["Stream", "Unbounded sequence of events."],
+      ["Offset", "Position in a log; consumer progress marker."],
+      ["At-Most-Once", "Possible loss, no duplicates."],
+      ["At-Least-Once", "No loss, possible duplicates."],
+      ["Event Time", "When the event happened."],
+      ["Processing Time", "When the processor saw it."],
+      ["Watermark", "Estimate that most events up to event time T have arrived."],
+      ["Tumbling Window", "Fixed, non-overlapping time window."],
+      ["Stream-Table Join", "Event stream enriched with table/reference state."],
+      ["Checkpoint", "Snapshot of state plus offsets."],
+      ["CDC", "Database changes emitted as event streams."]
+    ]
+  },
+  {
+    id: "future-data-systems",
+    title: "The Future of Data Systems",
+    subtitle: "Data integration, dataflow, correctness, observability, and responsibility",
+    notesPath: "./future-of-data-systems-summary.md",
+    flashcards: [
+      {
+        front: "Why are modern data systems more than one database?",
+        back: "They combine source stores, logs, caches, indexes, analytics systems, stream processors, and governance controls."
+      },
+      {
+        front: "What is the dual-write problem?",
+        back: "An application writes to two systems separately; one write may succeed while the other fails, causing inconsistency."
+      },
+      {
+        front: "How does CDC help integration?",
+        back: "CDC turns committed database changes into event streams, letting downstream systems derive updates from the source of truth."
+      },
+      {
+        front: "Derived data vs source data?",
+        back: "Source data is the protected truth. Derived data is computed from source data and can usually be rebuilt."
+      },
+      {
+        front: "What is end-to-end correctness?",
+        back: "The complete workflow produces the right business outcome, not merely that each component behaved correctly in isolation."
+      },
+      {
+        front: "How does a consumer know it processed event e789?",
+        back: "It durably records processed event IDs, ideally atomically with the business effect using a unique event_id."
+      },
+      {
+        front: "Lag vs freshness?",
+        back: "Lag measures how far behind a consumer or derived system is. Freshness measures how recently derived state reflects source truth."
+      },
+      {
+        front: "What is reconciliation?",
+        back: "Comparing derived outputs against the source of truth using counts, sums, checksums, samples, or business invariants."
+      },
+      {
+        front: "What is lineage?",
+        back: "A record of where data came from and which transformations produced a derived value."
+      },
+      {
+        front: "What is data minimization?",
+        back: "Collect only the data needed for the purpose, and avoid more precise or longer-retained data than necessary."
+      }
+    ],
+    questions: [
+      {
+        prompt: "Why does using many specialized data systems create integration risk?",
+        options: [
+          "Because every system uses the same schema",
+          "Because updates may need to flow asynchronously and can fail, lag, duplicate, or transform differently",
+          "Because derived data never changes",
+          "Because source data can always be ignored"
+        ],
+        answer: 1,
+        explanation: "Specialized systems are powerful, but keeping them consistent requires reliable dataflow, observability, and reconciliation."
+      },
+      {
+        prompt: "What problem does CDC primarily reduce?",
+        options: [
+          "Clock drift",
+          "Dual writes",
+          "Hot partitions",
+          "Two-phase locking"
+        ],
+        answer: 1,
+        explanation: "CDC derives events from committed database changes, reducing separate application DB-write plus event-publish failure modes."
+      },
+      {
+        prompt: "Which statement best describes derived data?",
+        options: [
+          "It is the only copy that matters",
+          "It is computed from source data and can often be rebuilt",
+          "It should never be monitored",
+          "It must always be updated with distributed transactions"
+        ],
+        answer: 1,
+        explanation: "Caches, indexes, analytics tables, and materialized views are derived from source data."
+      },
+      {
+        prompt: "End-to-end correctness means:",
+        options: [
+          "Kafka alone reports success",
+          "Each service logs something",
+          "The overall business outcome is correct across the complete workflow",
+          "All systems are eventually deleted"
+        ],
+        answer: 2,
+        explanation: "A workflow can still be wrong even if individual components behaved according to their local contracts."
+      },
+      {
+        prompt: "What is the safest way to deduplicate event processing?",
+        options: [
+          "Keep event IDs only in memory",
+          "Record processed event IDs durably, ideally in the same transaction as the business update",
+          "Assume the broker never redelivers",
+          "Use a wall-clock timestamp"
+        ],
+        answer: 1,
+        explanation: "Durable dedupe records with uniqueness constraints let retries become safe."
+      },
+      {
+        prompt: "Freshness is best described as:",
+        options: [
+          "How many partitions a topic has",
+          "How recently derived state reflects source-of-truth changes",
+          "Whether data has a primary key",
+          "Whether a transaction used 2PC"
+        ],
+        answer: 1,
+        explanation: "Freshness is about the age of the derived view relative to source updates."
+      },
+      {
+        prompt: "What does reconciliation do?",
+        options: [
+          "Deletes source data",
+          "Compares derived results with source truth to detect mismatches",
+          "Prevents all network failures",
+          "Makes every read linearizable"
+        ],
+        answer: 1,
+        explanation: "Reconciliation catches drift by comparing counts, sums, checksums, samples, and invariants."
+      },
+      {
+        prompt: "Why is anonymization difficult?",
+        options: [
+          "Names are always required",
+          "People can sometimes be re-identified from combinations of attributes and behavior",
+          "Data can never be encrypted",
+          "Aggregates are always private"
+        ],
+        answer: 1,
+        explanation: "Removing direct identifiers is not enough if quasi-identifiers can be combined."
+      },
+      {
+        prompt: "Which design is most privacy-conscious for delivery location data?",
+        options: [
+          "Store precise GPS forever for all users",
+          "Store precise location only while needed, restrict access, then delete or aggregate it",
+          "Put raw locations in every analytics dashboard",
+          "Use location for unrelated profiling without notice"
+        ],
+        answer: 1,
+        explanation: "Privacy-conscious design minimizes precision, retention, and access while matching the user-facing purpose."
+      }
+    ],
+    weakAreas: [
+      {
+        title: "Freshness vs computation time",
+        text: "Freshness means how recently a derived view reflects source-of-truth changes, not merely when a job last ran."
+      },
+      {
+        title: "Completeness checks",
+        text: "When observing derived state, also ask whether all expected records arrived, not only whether lag is low."
+      },
+      {
+        title: "End-to-end dedupe",
+        text: "Consumers know they processed an event only if they durably store processed IDs, preferably atomically with the business update."
+      },
+      {
+        title: "Data quality across many stores",
+        text: "Many derived systems can lag, fail, transform differently, or interpret schema changes differently, so quality is a pipeline property."
+      },
+      {
+        title: "Privacy-conscious storage",
+        text: "Good privacy design changes what is stored, how precise it is, who can access it, and how long it is retained."
+      }
+    ],
+    cheatSheet: [
+      ["Data Integration", "Use specialized systems, then connect them reliably."],
+      ["Dual Write", "Separate writes can partially fail and diverge."],
+      ["CDC", "Committed DB changes become event streams."],
+      ["Source Data", "Protected truth; hard to replace if corrupted."],
+      ["Derived Data", "Computed view; can usually be rebuilt."],
+      ["Dataflow", "Source update -> log -> processor -> derived view."],
+      ["E2E Correctness", "The whole business workflow is correct."],
+      ["Idempotency Key", "Stable request/event ID used to make retries safe."],
+      ["Lag", "How far behind a consumer/derived view is."],
+      ["Freshness", "How recent the derived view is relative to source truth."],
+      ["Reconciliation", "Compare derived outputs with source truth."],
+      ["Lineage", "Track sources and transformations for a value."],
+      ["Governance", "Ownership, access, retention, deletion, audit, compliance."],
+      ["Data Minimization", "Collect and retain only what is needed."]
+    ]
   }
 ];
